@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:http/http.dart' as http;
 import '../../models/university_model.dart';
+import '../../widgets/dialogs.dart';
 import '../../widgets/university_item.dart';
 import 'university_cubit.dart';
 import 'package:universities_app/di/dependency_injection.dart' as di;
@@ -22,12 +23,6 @@ class _UniversityScreenState extends State<UniversityScreen> {
   List<UniversityModel> universities = [];
   String? country;
 
-  // @override
-  // void initState() {
-  //   getUniversityData();
-  //   super.initState();
-  // }
-
   @override
   void didChangeDependencies() {
     final args =
@@ -39,59 +34,43 @@ class _UniversityScreenState extends State<UniversityScreen> {
   @override
   Widget build(BuildContext context) {
     return BlocProvider<UniversityCubit>(
-      create: (context) => di.sl()..loadData(),
-      child: BlocConsumer<UniversityCubit, UniversityState>(
-        listener: (context, state) {
+        create: (context) => di.sl()..loadData(country, universities),
+        child: BlocBuilder<UniversityCubit, UniversityState>(
+            builder: (context, state) {
           if (state is UniversityStateProgress) {
-            const Center(
-              child: CircularProgressIndicator(
-                color: Colors.white,
-              ),
-            );
-          }
-          if (state is UniversityStateLoaded) {
-            getUniversityData(context);
+            if (state.isLoading) {
+              return progressIndicator();
+            }
           } else if (state is UniversityStateError) {
-            //error
-          }
-        },
-        builder: (context, state) {
-          return Scaffold(
-            body: ListView.builder(
-              itemBuilder: (context, index) {
-                return UniversityItem(
-                  universityName: universities[index].name,
-                  country: universities[index].country,
+            if (state.showDialog) {
+              Future.delayed(Duration.zero, () {
+                Dialogs.errorDialogBox(
+                  context,
+                  'No internet connection',
+                  'Please check your internet connection and try again',
                 );
-              },
-              itemCount: universities.length,
-            ),
-          );
-        },
-      ),
-    );
+              });
+            }
+          }
+          return Scaffold(
+              body: ListView.builder(
+            itemBuilder: (context, index) {
+              return UniversityItem(
+                universityName: universities[index].name,
+                country: universities[index].country,
+              );
+            },
+            itemCount: universities.length,
+          ));
+        }));
   }
 
-  getUniversityData(BuildContext context) async {
-    await country;
-    var url = 'http://universities.hipolabs.com/search?country=$country';
-    try {
-      var response = await http.get(Uri.parse(url));
-      if (response.statusCode == 200) {
-        final jsonResponse = json.decode(response.body);
-
-        jsonResponse.forEach((data) {
-          universities.add(UniversityModel(
-            name: data['name'],
-            country: data['country'],
-          ));
-        });
-        setState(() {});
-      }
-    } on SocketException {
-      setState(() {
-        universities = [];
-      });
-    }
+  Widget progressIndicator() {
+    return const Scaffold(
+        body: Center(
+      child: CircularProgressIndicator(
+        color: Colors.yellow,
+      ),
+    ));
   }
 }

@@ -26,8 +26,8 @@ class UniversityStateLoaded extends UniversityState {
 }
 
 class UniversityStateError extends UniversityState {
-  final Object error;
-  const UniversityStateError(this.error);
+  final bool showDialog;
+  const UniversityStateError(this.showDialog);
   @override
-  List<Object> get props => [identityHashCode(this)];
+  List<Object> get props => [showDialog];
 }

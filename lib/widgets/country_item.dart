@@ -32,10 +32,15 @@ class CountryItem extends StatelessWidget {
         padding: const EdgeInsets.all(14),
         child: ListTile(
           leading: SizedBox(
-            width: 60,
-            height: 60,
-            child: Image.network(imageUrl),
-          ),
+              width: 60,
+              height: 60,
+              child: FadeInImage.assetNetwork(
+                imageErrorBuilder: (context, error, stackTrace) {
+                  return Image.asset('lib/assets/image-not-found.png');
+                },
+                placeholder: 'lib/assets/image-not-found.png',
+                image: imageUrl,
+              )),
           title: Text(
             country,
             style: const TextStyle(fontWeight: FontWeight.w500),
